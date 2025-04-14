@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven 3.8.6'
+        jdk 'JDK 21'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -10,13 +15,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './mvnw clean compile'
+                sh 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh './mvnw test'
+                sh 'mvn test'
             }
         }
     }
