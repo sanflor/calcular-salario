@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven 3.8.6'
-        jdk 'JDK 21'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -19,7 +14,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Test') {
             steps {
                 sh './mvnw test'
             }
