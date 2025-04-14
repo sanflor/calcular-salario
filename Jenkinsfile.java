@@ -1,31 +1,34 @@
-public class Jenkinsfile {
+pipeline {
+    agent any
 
-    pipeline {
-        agent any
+    tools {
+        maven 'Maven 3.8.6'
+        jdk 'JDK 21'
+    }
 
-        tools {
-            maven 'Maven 3.8.6'
-            jdk 'JDK 21'
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/sanflor/calcular-salario.git'
+            }
         }
 
-        stages {
-            stage('Checkout') {
-                steps {
-                    git 'https://github.com/salarcovargas/calcular-salario.git'
-                }
+        stage('Build') {
+            steps {
+                sh './mvnw clean compile'
             }
+        }
 
-            stage('Build') {
-                steps {
-                    sh 'mvn clean compile'
-                }
+        stage('Run Tests') {
+            steps {
+                sh './mvnw test'
             }
+        }
+    }
 
-            stage('Run Tests') {
-                steps {
-                    sh 'mvn test'
-                }
-            }
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
         }
     }
 }
