@@ -261,6 +261,71 @@ class PagoServiceTest {
         assertEquals("No se ha calculado nada. Todas las horas son cero.", exception.getMessage());
     }
 
+    @Test
+    void calcularPago_contratoTiempoCompleto_soloDominicales() {
+        PagoRequest request = new PagoRequest();
+        request.setTipoContrato(ContratoTipo.TIEMPO_COMPLETO);
+        request.setHorasTrabajadas(0);
+        request.setHorasNocturnas(0);
+        request.setHorasDominicalesYFestivos(4);
 
+        PagoResponse response = pagoService.calcularPago(request);
+
+        double valorHora = 25000;
+        double esperado = 4 * valorHora * 1.75;
+        double descuento = Math.round(esperado * 0.08 * 100.0) / 100.0;
+        double neto = Math.round((esperado - descuento) * 100.0) / 100.0;
+
+        assertEquals(esperado, response.getSalarioBruto(), 0.01);
+        assertEquals(descuento, response.getDescuentoSeguridadSocial(), 0.01);
+        assertEquals(neto, response.getSalarioNeto(), 0.01);
+    }
+
+    @Test
+    void calcularPago_contratoMedioTiempo_valoresGrandes() {
+        PagoRequest request = new PagoRequest();
+        request.setTipoContrato(ContratoTipo.MEDIO_TIEMPO);
+        request.setHorasTrabajadas(500);
+        request.setHorasNocturnas(50);
+        request.setHorasDominicalesYFestivos(20);
+
+        PagoResponse response = pagoService.calcularPago(request);
+
+        assertTrue(response.getSalarioBruto() > 0);
+        assertTrue(response.getDescuentoSeguridadSocial() > 0);
+        assertTrue(response.getSalarioNeto() > 0);
+    }
+
+    @Test
+    void calcularPago_contratoMedioTiempo_todasLasHoras() {
+        PagoRequest request = new PagoRequest();
+        request.setTipoContrato(ContratoTipo.MEDIO_TIEMPO);
+        request.setHorasTrabajadas(20);
+        request.setHorasNocturnas(5);
+        request.setHorasDominicalesYFestivos(2);
+
+        PagoResponse response = pagoService.calcularPago(request);
+
+        double valorHora = 12500;
+        double esperado = 20 * valorHora + 5 * valorHora * 1.35 + 2 * valorHora * 1.75;
+        double descuento = Math.round(esperado * 0.08 * 100.0) / 100.0;
+        double neto = Math.round((esperado - descuento) * 100.0) / 100.0;
+
+        assertEquals(esperado, response.getSalarioBruto(), 0.01);
+        assertEquals(descuento, response.getDescuentoSeguridadSocial(), 0.01);
+        assertEquals(neto, response.getSalarioNeto(), 0.01);
+    }
+
+    @Test
+    void obtenerValorHora_paraMedioTiempo_yTiempoCompleto() throws Exception {
+        var method = PagoService.class.getDeclaredMethod("obtenerValorHora", ContratoTipo.class);
+        method.setAccessible(true);
+
+        double valorMedio = (double) method.invoke(pagoService, ContratoTipo.MEDIO_TIEMPO);
+        double valorCompleto = (double) method.invoke(pagoService, ContratoTipo.TIEMPO_COMPLETO);
+
+        assertEquals(12500.0, valorMedio);
+        assertEquals(25000.0, valorCompleto);
+    }
 
 }
